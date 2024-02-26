@@ -22,3 +22,6 @@ go.work
 
 # Database files
 *.db
+
+# Untrack executable
+quote-vault
