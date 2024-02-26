@@ -106,7 +106,7 @@ func GetAllQuotes(db *sql.DB) ([]Quote, error) {
 	// Execute the string.
 	rows, err := db.Query(queryString)
 	if err != nil {
-		return nil, fmt.Errorf("error: %w", ErrMalformedQuery)
+		return []Quote{}, fmt.Errorf("error: %w", ErrMalformedQuery)
 	}
 
 	// Initialize slice of quotes.
@@ -116,31 +116,31 @@ func GetAllQuotes(db *sql.DB) ([]Quote, error) {
 	for rows.Next() {
 		var q Quote
 		if err := rows.Scan(&q.ID, &q.Body, &q.Author, &q.Date); err != nil {
-			return nil, fmt.Errorf("error: %w", ErrMalformedQuery)
+			return []Quote{}, fmt.Errorf("error: %w", ErrMalformedQuery)
 		}
 		quotes = append(quotes, q)
 	}
 
 	// Check if any errors occured while iterating over rows.
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error: %w", ErrRowIteration)
+		return []Quote{}, fmt.Errorf("error: %w", ErrRowIteration)
 	}
 
 	return quotes, nil
 }
 
 // Get quote from database.
-// Return nil if quote is not found.
 func GetQuote(db *sql.DB, id int) (Quote, error) {
-	var q Quote
 
 	// Create query string.
 	queryString := "SELECT * FROM quote WHERE id = ?"
 
 	// Construct query with query string.
-	_, err := db.Exec(queryString, id)
-	if err != nil {
-		return Quote{}, fmt.Errorf("error: %w", ErrMalformedQuery)
+	row := db.QueryRow(queryString, id)
+
+	var q Quote
+	if err := row.Scan(&q.ID, &q.Body, &q.Author, &q.Date); err != nil {
+		return Quote{}, fmt.Errorf("error: %w", ErrRowIteration)
 	}
 
 	// Return quote.
