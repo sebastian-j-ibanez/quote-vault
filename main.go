@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,7 +23,7 @@ func (m model) Init() tea.Cmd {
 
 func (m model) View() string {
 	if m.event != "" {
-		return fmt.Sprintf("You've selected: %s", m.event)
+		return "You've selected: " + m.event
 	}
 	return "Quote Vault"
 }
@@ -36,8 +35,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyCtrlBackslash:
+			fmt.Println("Exiting...")
 			return m, tea.Quit
+		case tea.KeyRunes:
+			switch msg.String() {
+			case "down", "j":
+				fmt.Println("J has been pressed...")
+			}
+
 		}
+
 	}
 
 	return m, nil
@@ -46,13 +53,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 var _ tea.Model = (*model)(nil)
 
 func main() {
-	state, err := NewModel()
+
+	// Init Db
+	db, err := InitDb()
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Error starting init command: %s\n", err))
+		// Potentially pass a message to the update function to display error.
 		os.Exit(1)
 	}
 
-	if _, err := tea.NewProgram(state).Run(); err != nil {
-		log.Fatal(err)
+	//quotes, err := GetAllQuotes(db)
+	quote, err := GetQuote(db, 1)
+
+	// Check for errors from GetQuote.
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
+
+	fmt.Println(quote.ID, quote.Body, quote.Author, quote.Date)
+
+	//state, err := NewModel()
+	//if err != nil {
+	//	fmt.Println(fmt.Printf("Error starting init command: %s\n", err))
+	//	os.Exit(1)
+	//}
+
+	//if _, err := tea.NewProgram(state, tea.WithAltScreen()).Run(); err != nil {
+	//	log.Fatal(err)
+	//}
 }
