@@ -10,7 +10,7 @@ import (
 // The file which will be used for the database.
 const DB_FILE = "vault.db"
 
-// Quote information.
+// Struct to represent the quote table.
 type Quote struct {
 	ID     int
 	Body   string
@@ -98,51 +98,33 @@ func DeleteQuote(db *sql.DB, id int) error {
 	return nil
 }
 
-func GetAllQuotes(db *sql.DB) ([]Quote, error) {
+func GetAllQuotes(db *sql.DB) ([]item, error) {
 
 	// Create query string.
-	queryString := "SELECT * FROM quote"
+	queryString := "SELECT body, author FROM quote"
 
 	// Execute the string.
 	rows, err := db.Query(queryString)
 	if err != nil {
-		return []Quote{}, fmt.Errorf("error: %w", ErrMalformedQuery)
+		return []item{}, fmt.Errorf("error: %w", ErrMalformedQuery)
 	}
 
 	// Initialize slice of quotes.
-	var quotes []Quote
+	var items []item
 
 	// Iterate through rows and save to quotes.
 	for rows.Next() {
-		var q Quote
-		if err := rows.Scan(&q.ID, &q.Body, &q.Author, &q.Date); err != nil {
-			return []Quote{}, fmt.Errorf("error: %w", ErrMalformedQuery)
+		var i item
+		if err := rows.Scan(&i.title, &i.desc); err != nil {
+			return []item{}, fmt.Errorf("error: %w", ErrMalformedQuery)
 		}
-		quotes = append(quotes, q)
+		items = append(items, i)
 	}
 
 	// Check if any errors occured while iterating over rows.
 	if err := rows.Err(); err != nil {
-		return []Quote{}, fmt.Errorf("error: %w", ErrRowIteration)
+		return []item{}, fmt.Errorf("error: %w", ErrRowIteration)
 	}
 
-	return quotes, nil
-}
-
-// Get quote from database.
-func GetQuote(db *sql.DB, id int) (Quote, error) {
-
-	// Create query string.
-	queryString := "SELECT * FROM quote WHERE id = ?"
-
-	// Construct query with query string.
-	row := db.QueryRow(queryString, id)
-
-	var q Quote
-	if err := row.Scan(&q.ID, &q.Body, &q.Author, &q.Date); err != nil {
-		return Quote{}, fmt.Errorf("error: %w", ErrRowIteration)
-	}
-
-	// Return quote.
-	return q, nil
+	return items, nil
 }
